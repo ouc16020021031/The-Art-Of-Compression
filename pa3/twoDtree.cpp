@@ -102,17 +102,20 @@ PNG twoDtree::render() {
 }
 
 void twoDtree::render(PNG & rendPNG, Node* subRoot) {//渲染修剪过的子树，将像素替换为计算所得的平均值
-	if (subRoot->left == NULL && subRoot->right == NULL){
-		for (int j = subRoot->upLeft.first; j < subRoot->lowRight.first + 1; j++){
-			for (int i = subRoot->upLeft.second; i < subRoot->lowRight.second + 1; i++){
-				*(rendPNG.getPixel(j, i)) = subRoot->avg;
-			}
+	if (subRoot == NULL)return;
+
+	int x1 = subRoot->upLeft.first;
+	int y1 = subRoot->upLeft.second;
+	int x2 = subRoot->lowRight.first;
+	int y2 = subRoot->lowRight.second;
+
+	for (int i = x1; i <= x2; i++) {
+		for (int j = y1; j <= y2; j++) {
+			*rendPNG.getPixel(i, j) = subRoot->avg;
 		}
 	}
-
-	if (subRoot->left != NULL)render(rendPNG, subRoot->left);
-
-	if (subRoot->right != NULL)render(rendPNG, subRoot->right);
+	render(rendPNG, subRoot->left);
+	render(rendPNG, subRoot->right);
 }
 
 void twoDtree::prune(double pct, int tol) {
@@ -122,8 +125,7 @@ void twoDtree::prune(double pct, int tol) {
 void twoDtree::prune(double pct, int tol, Node* subRoot) {
 	if (subRoot == NULL || subRoot->left == NULL && subRoot->right == NULL)return;
 
-	RGBAPixel subAvg = subRoot->avg;
-	long double tolleaf_number = getTolleafNumber(tol, subRoot, subAvg);
+	long double tolleaf_number = getTolleafNumber(tol, subRoot, subRoot->avg);
 	long double leaf_number = getLeafNumber(subRoot);
 
 	double ratio = (double)tolleaf_number / (double)leaf_number;
@@ -148,7 +150,7 @@ long twoDtree::getTolleafNumber(int tol, Node* subRoot, RGBAPixel subAvg) {
 	if (subRoot == NULL) return 0;
 
 	if (subRoot->left == NULL && subRoot->right == NULL) {
-		long double diff = (r - subAvg.r)*(r - subAvg.r) + (g - subAvg.g)*(g - subAvg.g) + (b - subAvg.b)*(b - subAvg.b);
+		long long diff = (r - subAvg.r)*(r - subAvg.r) + (g - subAvg.g)*(g - subAvg.g) + (b - subAvg.b)*(b - subAvg.b);
 
 		if (diff <= tol) return 1;
 		else return 0;
